@@ -1,6 +1,5 @@
 import 'package:booking_app/data/type_data.dart';
 import 'package:booking_app/screens/methods/form_screen.dart';
-import 'package:booking_app/screens/methods/procedures_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:booking_app/models/hotel_model.dart';
 
@@ -128,7 +127,10 @@ class _RoomsScreenState extends State<RoomsScreen> {
                         Navigator.push(
                           context,
                           MaterialPageRoute(
-                            builder: (context) => FirstPage(room: room),
+                            builder: (context) => FirstPage(
+                              room: room,
+                              accommodation: _accommodation,
+                            ),
                           ),
                         );
                       },

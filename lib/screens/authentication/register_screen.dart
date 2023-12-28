@@ -248,6 +248,12 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   child: ElevatedButton(
                     onPressed: () {
                       registerUser();
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => const LoginScreen(),
+                        ),
+                      );
                     },
                     style: ElevatedButton.styleFrom(
                       shadowColor: Colors.transparent,

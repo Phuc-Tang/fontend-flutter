@@ -1,7 +1,7 @@
 import 'package:booking_app/screens/authentication/login_screen.dart';
+import 'package:booking_app/screens/authentication/register_screen.dart';
 
 import 'package:flutter/material.dart';
-import 'package:booking_app/screens/profile/profile_screen.dart';
 
 class WelcomeScreen extends StatefulWidget {
   const WelcomeScreen({Key? key}) : super(key: key);
@@ -96,7 +96,7 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
                           Navigator.push(
                             context,
                             MaterialPageRoute(
-                              builder: (_) => const ProfileScreen(),
+                              builder: (_) => const RegisterScreen(),
                             ),
                           );
                         }

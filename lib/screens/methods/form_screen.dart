@@ -1,5 +1,7 @@
+import 'package:booking_app/models/hotel_model.dart';
 import 'package:booking_app/models/phone_nation_model.dart';
 import 'package:booking_app/provider/user_provider.dart';
+import 'package:booking_app/screens/methods/confirm.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:country_code_picker/country_code_picker.dart';
@@ -12,13 +14,16 @@ import 'package:logger/logger.dart';
 
 class FirstPage extends StatefulWidget {
   final Map<String, dynamic> room;
-  FirstPage({Key? key, required this.room}) : super(key: key);
+  final Hotel accommodation;
+  FirstPage({Key? key, required this.room, required this.accommodation})
+      : super(key: key);
 
   @override
   State<StatefulWidget> createState() => FirstPageState();
 }
 
 class FirstPageState extends State<FirstPage> {
+  late Hotel _accommodation;
   late Map<String, dynamic> room;
   late DateTimeRange dateRange;
   late CountryInfo? selectedCountry;
@@ -46,6 +51,7 @@ class FirstPageState extends State<FirstPage> {
     fullNameController = TextEditingController();
     gmailController = TextEditingController();
     phoneNumberController = TextEditingController();
+    _accommodation = widget.accommodation;
   }
 
   @override
@@ -64,6 +70,7 @@ class FirstPageState extends State<FirstPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      resizeToAvoidBottomInset: false,
       body: Container(
         padding: const EdgeInsets.fromLTRB(20, 0, 20, 0),
         child: Column(
@@ -641,7 +648,6 @@ class FirstPageState extends State<FirstPage> {
       final userData =
           Provider.of<UserProvider>(context, listen: false).userData;
 
-      // Gọi hàm BookingHotel
       final result = await ApiService.BookingHotel(
         email: gmailController.text,
         fullname: fullNameController.text,
@@ -649,19 +655,31 @@ class FirstPageState extends State<FirstPage> {
         userId: userData?['_id'] ?? '',
         numOfGuest: int.parse(numberOfGuestsController.text),
         numOfRoom: int.parse(numberOfRoomsController.text),
-        checkin: start,
-        checkout: end,
+        checkin: dateRange.start,
+        checkout: dateRange.end,
         room: '${room['_id']}',
         total: int.parse('${room['priceRoom']}'),
+        accommodationId: _accommodation.id,
       );
 
       // In log để kiểm tra kết quả
       print(result);
 
-      // Thực hiện các bước xử lý phản hồi hoặc chuyển trang sau khi đặt phòng thành công
-      // ...
+      if (result['success'] == true) {
+        // Nếu đặt phòng thành công, chuyển đến trang đặt phòng thành công
+        // ignore: use_build_context_synchronously
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(
+            builder: (context) =>
+                const ConfirmScreen(), // Thay thế bằng tên trang thành công của bạn
+          ),
+        );
+      } else {
+        // Xử lý nếu có lỗi trong quá trình đặt phòng
+        // Hiển thị thông báo hoặc thực hiện các xử lý khác
+      }
     } catch (error) {
-      // In log nếu có lỗi
       print(error);
     }
   }
@@ -685,9 +703,25 @@ class ApiService {
     required DateTime checkin,
     required DateTime checkout,
     required int total,
+    required String accommodationId,
   }) async {
     try {
-      final Uri url = Uri.parse('$baseUrl/booking/booking-room/$userId');
+      final Uri url =
+          Uri.parse('$baseUrl/booking/booking-room/$accommodationId');
+
+      print('Request Data: ${jsonEncode({
+            'room': room,
+            'email': email,
+            'fullname': fullname,
+            'phone': phone,
+            'userId': userId,
+            'numOfGuest': numOfGuest,
+            'numOfRoom': numOfRoom,
+            'checkin': formatDateTime(checkin),
+            'checkout': formatDateTime(checkout),
+            'total': total,
+            'hotelId': accommodationId,
+          })}');
 
       final response = await http.post(
         url,
@@ -699,14 +733,16 @@ class ApiService {
           'email': email,
           'fullname': fullname,
           'phone': phone,
-          'userId': userId,
-          'numOfGuest': numOfGuest,
-          'numOfRoom': numOfRoom,
+          'user_id': userId,
+          'guest': numOfGuest,
+          'quantity': numOfRoom,
           'checkin': formatDateTime(checkin),
           'checkout': formatDateTime(checkout),
           'total': total,
         }),
       );
+
+      print('Response: ${response.body}');
 
       if (response.statusCode == 201) {
         Map<String, dynamic> data = json.decode(response.body);
@@ -716,6 +752,7 @@ class ApiService {
         return {'success': false, 'error': error};
       }
     } catch (error) {
+      print('Error: $error');
       return {
         'success': false,
         'error': {'message': error.toString()}

@@ -32,11 +32,11 @@ class _NavigationScreenState extends State<NavigationScreen> {
   Widget _buildBody() {
     switch (_currentPageIndex) {
       case 0:
-        return HomePageScreen(user: widget.user);
+        return HomePageScreen();
       case 1:
         return ProfileScreen();
       case 2:
-        return HomePageScreen(user: widget.user);
+        return HomePageScreen();
       case 3:
         return ProfileScreen();
       case 4:

@@ -1,9 +1,12 @@
 import 'dart:ui';
+import 'package:booking_app/provider/user_provider.dart';
+import 'package:booking_app/screens/accommodation/rating_screen.dart';
 import 'package:booking_app/screens/accommodation/rooms_screen.dart';
 import 'package:intl/intl.dart';
 import 'package:flutter/material.dart';
 import 'package:booking_app/models/hotel_model.dart';
 import 'package:page_transition/page_transition.dart';
+import 'package:provider/provider.dart';
 import 'package:typicons_flutter/typicons_flutter.dart';
 
 class DetailScreen extends StatefulWidget {
@@ -27,6 +30,8 @@ class _DetailScreenState extends State<DetailScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final userData = Provider.of<UserProvider>(context, listen: false).userData;
+    print(userData?['booking']);
     return Scaffold(
       body: CustomScrollView(
         slivers: [
@@ -196,33 +201,44 @@ class _DetailScreenState extends State<DetailScreen> {
                     ),
                   ),
                   tableStatesRating(),
-                  Column(
-                    children: [
-                      TextButton(
-                        onPressed: () {},
-                        child: const Text('Viết bài đánh giá'),
-                      ),
-                      Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: List.generate(5, (index) {
-                          return IconButton(
-                            onPressed: () {
-                              // Bạn có thể thực hiện các hành động khi người dùng chọn một sao ở đây.
-                              setState(() {
-                                ratingStar = index + 1;
-                              });
-                            },
-                            icon: Icon(
-                              index < ratingStar
-                                  ? Icons.star
-                                  : Icons.star_border,
-                              color: Colors.amber,
+                  userData?['booking'].isNotEmpty
+                      ? Column(
+                          children: [
+                            const Text(
+                              'Giá giá',
+                              style: TextStyle(
+                                  color: Color(0xff4361EE),
+                                  fontWeight: FontWeight.bold),
                             ),
-                          );
-                        }),
-                      ),
-                    ],
-                  ),
+                            Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: List.generate(5, (index) {
+                                return IconButton(
+                                  onPressed: () {
+                                    Navigator.pushReplacement(
+                                      context,
+                                      MaterialPageRoute(
+                                        builder: (context) => RatingScreen(
+                                            initialRating: index + 1,
+                                            accommodation: _accommodation),
+                                      ),
+                                    );
+                                    setState(() {
+                                      ratingStar = index + 1;
+                                    });
+                                  },
+                                  icon: Icon(
+                                    index < ratingStar
+                                        ? Icons.star
+                                        : Icons.star_border,
+                                    color: Colors.amber,
+                                  ),
+                                );
+                              }),
+                            ),
+                          ],
+                        )
+                      : Container(),
                   tabReviewLibrary(),
                 ],
               ),
@@ -255,95 +271,91 @@ class _DetailScreenState extends State<DetailScreen> {
             height: 300,
             child: TabBarView(
               children: [
-                _accommodation.reviews.isEmpty
-                    ? const Center(
-                        child: Text('Chưa có đánh giá.'),
-                      )
-                    : ListView.builder(
-                        scrollDirection: Axis.vertical,
-                        itemCount: _accommodation.reviews.length,
-                        itemBuilder: (context, index) {
-                          _accommodation.reviews.sort((a, b) {
-                            DateTime createdAtA =
-                                DateTime.parse(a['createdAt']);
-                            DateTime createdAtB =
-                                DateTime.parse(b['createdAt']);
-                            return createdAtB.compareTo(createdAtA);
-                          });
-                          var reviewInfo = _accommodation.reviews[index];
-                          return Container(
-                            padding: const EdgeInsets.fromLTRB(0, 5, 0, 5),
-                            margin: const EdgeInsets.only(bottom: 5),
-                            child: Column(
+                if (_accommodation.reviews.isEmpty)
+                  const Center(
+                    child: Text('Chưa có đánh giá.'),
+                  )
+                else
+                  ListView.builder(
+                    scrollDirection: Axis.vertical,
+                    itemCount: _accommodation.reviews.length,
+                    itemBuilder: (context, index) {
+                      _accommodation.reviews.sort((a, b) {
+                        DateTime createdAtA = DateTime.parse(a['createdAt']);
+                        DateTime createdAtB = DateTime.parse(b['createdAt']);
+                        return createdAtB.compareTo(createdAtA);
+                      });
+                      var reviewInfo = _accommodation.reviews[index];
+                      return Container(
+                        padding: const EdgeInsets.fromLTRB(0, 5, 0, 5),
+                        margin: const EdgeInsets.only(bottom: 5),
+                        child: Column(
+                          children: [
+                            Row(
                               children: [
-                                Row(
-                                  children: [
-                                    SizedBox(
-                                      width: 30,
-                                      height: 30,
-                                      child: ClipRRect(
-                                        borderRadius:
-                                            BorderRadius.circular(100),
-                                        child: Image.asset(
-                                            'assets/images/logo.png'),
-                                      ),
-                                    ),
-                                    const SizedBox(width: 3),
-                                    Text(
-                                      '${reviewInfo['user_id']['fullname']}',
-                                      style: const TextStyle(
-                                          fontWeight: FontWeight.bold),
-                                    ),
-                                  ],
-                                ),
-                                Padding(
-                                  padding:
-                                      const EdgeInsets.fromLTRB(0, 5, 0, 5),
-                                  child: Row(
-                                    children: [
-                                      Row(
-                                        children: List.generate(
-                                          5,
-                                          (index) {
-                                            double rating = double.parse(
-                                                reviewInfo['rating']
-                                                    .toString());
-                                            IconData starIcon;
-
-                                            if (rating >= index + 1) {
-                                              starIcon = Icons.star;
-                                            } else if (rating >= index + 0.5) {
-                                              starIcon = Icons.star_half;
-                                            } else {
-                                              starIcon = Icons.star_border;
-                                            }
-
-                                            return Icon(
-                                              starIcon,
-                                              color: const Color(0xff4361EE),
-                                              size: 15,
-                                            );
-                                          },
-                                        ),
-                                      ),
-                                      const SizedBox(width: 3),
-                                      Text(
-                                        DateFormat('dd-MM-yyyy').format(
-                                            DateTime.parse(
-                                                reviewInfo['createdAt'])),
-                                      ),
-                                    ],
+                                SizedBox(
+                                  width: 30,
+                                  height: 30,
+                                  child: ClipRRect(
+                                    borderRadius: BorderRadius.circular(100),
+                                    child:
+                                        Image.asset('assets/images/logo.png'),
                                   ),
                                 ),
-                                Align(
-                                  alignment: Alignment.centerLeft,
-                                  child: Text('${reviewInfo['comment']}'),
+                                const SizedBox(width: 3),
+                                Text(
+                                  '${reviewInfo['user_id']['fullname']}',
+                                  style: const TextStyle(
+                                      fontWeight: FontWeight.bold),
                                 ),
                               ],
                             ),
-                          );
-                        },
-                      ),
+                            Padding(
+                              padding: const EdgeInsets.fromLTRB(0, 5, 0, 5),
+                              child: Row(
+                                children: [
+                                  Row(
+                                    children: List.generate(
+                                      5,
+                                      (index) {
+                                        double rating = double.parse(
+                                            reviewInfo['rating'].toString());
+                                        IconData starIcon;
+
+                                        if (rating >= index + 1) {
+                                          starIcon = Icons.star;
+                                        } else if (rating >= index + 0.5) {
+                                          starIcon = Icons.star_half;
+                                        } else {
+                                          starIcon = Icons.star_border;
+                                        }
+
+                                        return Icon(
+                                          starIcon,
+                                          color: const Color(0xff4361EE),
+                                          size: 15,
+                                        );
+                                      },
+                                    ),
+                                  ),
+                                  const SizedBox(width: 3),
+                                  Text(
+                                    DateFormat('dd-MM-yyyy').format(
+                                        DateTime.parse(
+                                            reviewInfo['createdAt'])),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            Align(
+                              alignment: Alignment.centerLeft,
+                              child: Text('${reviewInfo['comment']}'),
+                            ),
+                          ],
+                        ),
+                      );
+                    },
+                  ),
                 const Center(
                   child: Text('Nội dung Tab 2'),
                 ),
@@ -434,11 +446,11 @@ class _DetailScreenState extends State<DetailScreen> {
 
   List<Widget> ratingTable() {
     List<int> ratingStats = _accommodation.calculateRatingStats();
-    int totalReviews = _accommodation.reviews.length;
+    int totalReviews = _accommodation.reviews.length ?? 0;
 
     return List.generate(5, (index) {
       final starIndex = index + 1;
-
+      final progressValue = (ratingStats[index] ?? 0) / totalReviews;
       return Row(
         children: [
           SizedBox(
@@ -451,7 +463,7 @@ class _DetailScreenState extends State<DetailScreen> {
           const SizedBox(width: 8),
           Expanded(
             child: LinearProgressIndicator(
-              value: ratingStats[index] / totalReviews,
+              value: progressValue.isFinite ? progressValue : 0,
               backgroundColor: Colors.grey,
               valueColor: const AlwaysStoppedAnimation<Color>(
                 Color(0xff4361EE),

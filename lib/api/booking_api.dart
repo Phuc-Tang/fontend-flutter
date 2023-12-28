@@ -3,7 +3,7 @@ import 'package:http/http.dart' as http;
 import 'dart:convert';
 
 class ApiService {
-  static const String baseUrl = 'http://localhost:5000/api';
+  static const String baseUrl = '192.168.1.5:5000/api';
 
   Future<Map<String, dynamic>> bookRoom(
       String hotelId, Map<String, dynamic> bookingData) async {

@@ -1,12 +1,12 @@
+import 'package:booking_app/provider/user_provider.dart';
 import 'package:booking_app/widget/hotel_list_widget.dart';
 import 'package:booking_app/widget/villa_list_widget.dart';
 import 'package:flutter/material.dart';
 import 'package:booking_app/data/category_data.dart';
+import 'package:provider/provider.dart';
 
 class HomePageScreen extends StatefulWidget {
-  final Map<String, dynamic> user;
-
-  const HomePageScreen({Key? key, required this.user}) : super(key: key);
+  const HomePageScreen({Key? key}) : super(key: key);
 
   @override
   State<StatefulWidget> createState() => _HomePageState();
@@ -19,7 +19,6 @@ class _HomePageState extends State<HomePageScreen> {
   int previousSelectedCategoryIndex = 0;
   Map<int, List<String>> sortingOptionsMap = {};
 
-  late String userName;
   late Widget selectedCategoryWidget;
 
   Map<int, Widget> categoryWidgets = {
@@ -36,7 +35,7 @@ class _HomePageState extends State<HomePageScreen> {
     for (int i = 0; i < categories.length; i++) {
       sortingOptionsMap[i] = List.from(categories[i].sortingOptions);
     }
-    userName = widget.user['fullname'];
+
     selectedCategoryWidget =
         categoryWidgets[selectedCategoryIndex] ?? Container();
   }
@@ -281,7 +280,7 @@ class _HomePageState extends State<HomePageScreen> {
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       const Text(
-                        'Đánh giá cao',
+                        'Địa điểm phổ biến',
                         style: TextStyle(
                             fontSize: 20, fontWeight: FontWeight.bold),
                       ),
@@ -379,6 +378,7 @@ class _HomePageState extends State<HomePageScreen> {
   }
 
   Row avatarUsername() {
+    final userData = Provider.of<UserProvider>(context, listen: false).userData;
     return Row(
       children: [
         const CircleAvatar(
@@ -397,7 +397,7 @@ class _HomePageState extends State<HomePageScreen> {
               ),
             ),
             Text(
-              userName,
+              userData?['fullname'] ?? '',
               style: const TextStyle(
                   color: Colors.black,
                   fontSize: 20,
