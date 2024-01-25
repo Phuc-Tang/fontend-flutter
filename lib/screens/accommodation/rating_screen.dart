@@ -1,8 +1,7 @@
 import 'package:booking_app/models/hotel_model.dart';
 import 'package:flutter/material.dart';
-import 'package:http/http.dart' as http;
-
-import 'dart:convert';
+import 'package:dio/dio.dart';
+import 'package:booking_app/network/config.dart';
 
 class RatingScreen extends StatefulWidget {
   final int initialRating;
@@ -143,11 +142,10 @@ class _RatingScreenState extends State<RatingScreen> {
 
   void handleRating(BuildContext context) async {
     try {
-      int idHotel = int.parse(_accommodation.id);
-      final result = await ApiService.ReviewHotel(
+      final result = await ApiService.reviewHotel(
           comment: commentTextController.text,
           rating: widget.initialRating,
-          hotelId: idHotel);
+          hotelId: _accommodation.id);
 
       // In log để kiểm tra kết quả
       print(result);
@@ -158,35 +156,33 @@ class _RatingScreenState extends State<RatingScreen> {
 }
 
 class ApiService {
-  static const String baseUrl = 'http://192.168.1.5:5000/api';
+  static final Dio _dio = Dio(BaseOptions(baseUrl: NetworkConfig.baseUrl));
 
-  static Future<Map<String, dynamic>> ReviewHotel({
+  static Future<Map<String, dynamic>> reviewHotel({
     required String comment,
     required int rating,
-    required int hotelId,
+    required String hotelId,
   }) async {
     try {
-      final Uri url = Uri.parse('$baseUrl/review/comment-review/$hotelId');
-
-      final response = await http.post(
-        url,
-        headers: <String, String>{
-          'Content-Type': 'application/json; charset=UTF-8',
-        },
-        body: jsonEncode({
+      final response = await _dio.post(
+        '/review/comment-review/$hotelId',
+        options: Options(
+          headers: {'Content-Type': 'application/json'},
+        ),
+        data: {
           'comment': comment,
           'rating': rating,
           'hotelId': hotelId,
-        }),
+        },
       );
 
-      print('Response: ${response.body}');
+      print('Response: ${response.data}');
 
       if (response.statusCode == 201) {
-        Map<String, dynamic> data = json.decode(response.body);
+        Map<String, dynamic> data = response.data;
         return {'success': true, 'data': data};
       } else {
-        Map<String, dynamic> error = {'message': 'Registration unsuccessful'};
+        Map<String, dynamic> error = {'message': 'Rating unsuccessful'};
         return {'success': false, 'error': error};
       }
     } catch (error) {

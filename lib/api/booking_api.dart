@@ -1,22 +1,25 @@
-// api_service.dart
-import 'package:http/http.dart' as http;
-import 'dart:convert';
+import 'package:dio/dio.dart';
+import 'package:booking_app/network/config.dart';
 
 class ApiService {
-  static const String baseUrl = '192.168.1.5:5000/api';
+  final Dio _dio = Dio(BaseOptions(baseUrl: NetworkConfig.baseUrl));
 
   Future<Map<String, dynamic>> bookRoom(
       String hotelId, Map<String, dynamic> bookingData) async {
-    final response = await http.post(
-      Uri.parse('$baseUrl/booking/booking-room/$hotelId'),
-      headers: {'Content-Type': 'application/json'},
-      body: json.encode(bookingData),
-    );
+    try {
+      final response = await _dio.post(
+        '/booking/booking-room/$hotelId',
+        options: Options(headers: {'Content-Type': 'application/json'}),
+        data: bookingData,
+      );
 
-    if (response.statusCode == 200) {
-      return json.decode(response.body);
-    } else {
-      throw Exception('Failed to book room');
+      if (response.statusCode == 200) {
+        return response.data;
+      } else {
+        throw Exception('Failed to book room');
+      }
+    } catch (e) {
+      throw Exception('Failed to book room: $e');
     }
   }
 }

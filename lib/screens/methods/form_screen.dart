@@ -8,9 +8,9 @@ import 'package:country_code_picker/country_code_picker.dart';
 import 'package:booking_app/data/phone_nation_data.dart';
 import 'package:provider/provider.dart';
 import 'package:typicons_flutter/typicons_flutter.dart';
-import 'dart:convert';
-import 'package:http/http.dart' as http;
 import 'package:logger/logger.dart';
+import 'package:dio/dio.dart';
+import 'package:booking_app/network/config.dart';
 
 class FirstPage extends StatefulWidget {
   final Map<String, dynamic> room;
@@ -648,7 +648,7 @@ class FirstPageState extends State<FirstPage> {
       final userData =
           Provider.of<UserProvider>(context, listen: false).userData;
 
-      final result = await ApiService.BookingHotel(
+      final result = await ApiService.bookingHotel(
         email: gmailController.text,
         fullname: fullNameController.text,
         phone: int.parse(phoneNumberController.text),
@@ -690,9 +690,9 @@ String formatDateTime(DateTime dateTime) {
 }
 
 class ApiService {
-  static const String baseUrl = 'http://192.168.1.5:5000/api';
+  static final Dio _dio = Dio(BaseOptions(baseUrl: NetworkConfig.baseUrl));
 
-  static Future<Map<String, dynamic>> BookingHotel({
+  static Future<Map<String, dynamic>> bookingHotel({
     required String email,
     required String room,
     required String fullname,
@@ -706,29 +706,12 @@ class ApiService {
     required String accommodationId,
   }) async {
     try {
-      final Uri url =
-          Uri.parse('$baseUrl/booking/booking-room/$accommodationId');
-
-      print('Request Data: ${jsonEncode({
-            'room': room,
-            'email': email,
-            'fullname': fullname,
-            'phone': phone,
-            'userId': userId,
-            'numOfGuest': numOfGuest,
-            'numOfRoom': numOfRoom,
-            'checkin': formatDateTime(checkin),
-            'checkout': formatDateTime(checkout),
-            'total': total,
-            'hotelId': accommodationId,
-          })}');
-
-      final response = await http.post(
-        url,
-        headers: <String, String>{
-          'Content-Type': 'application/json; charset=UTF-8',
-        },
-        body: jsonEncode({
+      final response = await _dio.post(
+        '/booking/booking-room/$accommodationId',
+        options: Options(
+          headers: {'Content-Type': 'application/json'},
+        ),
+        data: {
           'room': room,
           'email': email,
           'fullname': fullname,
@@ -739,16 +722,16 @@ class ApiService {
           'checkin': formatDateTime(checkin),
           'checkout': formatDateTime(checkout),
           'total': total,
-        }),
+        },
       );
 
-      print('Response: ${response.body}');
+      print('Response: ${response.data}');
 
       if (response.statusCode == 201) {
-        Map<String, dynamic> data = json.decode(response.body);
+        Map<String, dynamic> data = response.data;
         return {'success': true, 'data': data};
       } else {
-        Map<String, dynamic> error = {'message': 'Registration unsuccessful'};
+        Map<String, dynamic> error = {'message': 'Booking unsuccessful'};
         return {'success': false, 'error': error};
       }
     } catch (error) {

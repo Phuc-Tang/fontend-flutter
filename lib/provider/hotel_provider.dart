@@ -1,8 +1,8 @@
-import 'dart:convert';
+import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
-import 'package:http/http.dart' as http;
 import 'package:booking_app/models/hotel_model.dart';
 import 'package:logger/logger.dart';
+import 'package:booking_app/network/config.dart';
 
 class HotelProvider with ChangeNotifier {
   final Logger logger = Logger();
@@ -20,13 +20,12 @@ class HotelProvider with ChangeNotifier {
     notifyListeners();
 
     try {
-      final response =
-          await http.get(Uri.parse('http://192.168.1.5:5000/api/hotel'));
+      final response = await Dio().get('${NetworkConfig.baseUrl}/hotel');
 
       logger.i('API Response: ${response.statusCode}');
 
       if (response.statusCode == 200) {
-        final List<dynamic> data = json.decode(response.body);
+        final List<dynamic> data = response.data;
         _hotels = data.map((json) => Hotel.fromJson(json)).toList();
         notifyListeners();
       } else {

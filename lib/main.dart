@@ -2,14 +2,12 @@ import 'package:booking_app/provider/booking_provider.dart';
 import 'package:booking_app/provider/hotel_provider.dart';
 import 'package:booking_app/screens/authentication/register_screen.dart';
 import 'package:booking_app/screens/welcome_sreen.dart';
-import 'package:booking_app/security/env.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:booking_app/provider/user_provider.dart';
 import 'package:provider/provider.dart';
 
 void main() async {
-  await Environment.load();
   runApp(
     MultiProvider(
       providers: [
